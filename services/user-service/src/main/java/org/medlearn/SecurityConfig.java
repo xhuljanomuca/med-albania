@@ -11,7 +11,9 @@ import java.util.*;
   conv.setJwtGrantedAuthoritiesConverter(jwt -> {
    var realm=jwt.getClaimAsMap("realm_access");
    if(realm==null || !(realm.get("roles") instanceof Collection<?> roles)) return List.of();
-   return roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_"+r)).toList();
+   return roles.stream()
+           .<GrantedAuthority>map(role -> new SimpleGrantedAuthority(role))
+           .toList();
   });
   return http.csrf(c->c.disable()).authorizeHttpRequests(a->a
    .requestMatchers("/internal/profiles/**").hasRole("svc_certificate")
