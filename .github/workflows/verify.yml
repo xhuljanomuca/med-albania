@@ -1,0 +1,38 @@
+name: verify
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, user-service, enrollment-service, course-service, exam-service, certificate-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: services/${{ matrix.service }}/pom.xml
+      - name: Java 25 and Maven versions
+        run: java -version && mvn -version
+      - name: Build and run tests
+        run: mvn -B clean verify
+        working-directory: services/${{ matrix.service }}
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/validate_structure.py
+      - run: python3 scripts/phase48_preflight.py
