@@ -1,0 +1,18 @@
+server:
+  port: 8083
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER}
+          jwk-set-uri: ${KEYCLOAK_INTERNAL:http://keycloak:8080}/realms/medlearn/protocol/openid-connect/certs

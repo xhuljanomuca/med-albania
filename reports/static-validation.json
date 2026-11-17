@@ -1,0 +1,23 @@
+{
+  "checks": {
+    "services/user-service/pom.xml": "PASS",
+    "services/course-service/pom.xml": "PASS",
+    "services/exam-service/pom.xml": "PASS",
+    "services/api-gateway/pom.xml": "PASS",
+    "services/enrollment-service/pom.xml": "PASS",
+    "services/certificate-service/pom.xml": "PASS",
+    "web/tsconfig.json": "PASS",
+    "web/package.json": "PASS",
+    "infra/keycloak/medlearn-realm.json": "PASS",
+    "custom_gateway_removed": "PASS",
+    "official_gateway_dependency": "PASS"
+  },
+  "passed": 11,
+  "failed": 0,
+  "limitations": [
+    "No Java 25",
+    "No Maven",
+    "No Docker",
+    "No running Keycloak/PostgreSQL"
+  ]
+}
