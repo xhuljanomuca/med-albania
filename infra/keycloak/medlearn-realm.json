@@ -1,0 +1,101 @@
+{
+  "realm": "medlearn",
+  "enabled": true,
+  "registrationAllowed": false,
+  "verifyEmail": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "platform_admin"
+      },
+      {
+        "name": "instructor"
+      },
+      {
+        "name": "professional"
+      },
+      {
+        "name": "student"
+      },
+      {
+        "name": "svc_certificate"
+      },
+      {
+        "name": "svc_exam"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "medlearn-web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "medlearn-backend",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "secret": "CHANGE_ME_LONG_RANDOM_CLIENT_SECRET"
+    },
+    {
+      "clientId": "medlearn-certificate-service",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "secret": "CHANGE_ME_CERTIFICATE_CLIENT_SECRET"
+    },
+    {
+      "clientId": "medlearn-exam-service",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "secret": "CHANGE_ME_EXAM_CLIENT_SECRET"
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-medlearn-backend",
+      "enabled": true,
+      "serviceAccountClientId": "medlearn-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-medlearn-certificate-service",
+      "enabled": true,
+      "serviceAccountClientId": "medlearn-certificate-service",
+      "realmRoles": [
+        "svc_certificate"
+      ]
+    },
+    {
+      "username": "service-account-medlearn-exam-service",
+      "enabled": true,
+      "serviceAccountClientId": "medlearn-exam-service",
+      "realmRoles": [
+        "svc_exam"
+      ]
+    }
+  ]
+}

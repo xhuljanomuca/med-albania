@@ -1,0 +1,1 @@
+import './globals.css';import type {ReactNode} from 'react';export const metadata={title:'MedLearn',description:'Medical education platform'};export default function Root({children}:{children:ReactNode}){return <html lang="sq"><body>{children}</body></html>};

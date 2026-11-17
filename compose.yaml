@@ -1,0 +1,165 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: medlearn
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medlearn"]
+      interval: 5s
+      retries: 20
+  keycloak-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
+      POSTGRES_DB: keycloak
+    volumes: [keycloakdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      retries: 20
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mkdir -p /opt/keycloak/data/import &&
+        cp /config/medlearn-realm.json /opt/keycloak/data/import/medlearn-realm.json &&
+        sed -i "s/CHANGE_ME_LONG_RANDOM_CLIENT_SECRET/$$KEYCLOAK_CLIENT_SECRET/g" /opt/keycloak/data/import/medlearn-realm.json &&
+        sed -i "s/CHANGE_ME_CERTIFICATE_CLIENT_SECRET/$$SERVICE_CLIENT_SECRET/g" /opt/keycloak/data/import/medlearn-realm.json &&
+        sed -i "s/CHANGE_ME_EXAM_CLIENT_SECRET/$$EXAM_CLIENT_SECRET/g" /opt/keycloak/data/import/medlearn-realm.json &&
+        exec /opt/keycloak/bin/kc.sh start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      SERVICE_CLIENT_SECRET: ${SERVICE_CLIENT_SECRET:?set in .env}
+      EXAM_CLIENT_SECRET: ${EXAM_CLIENT_SECRET:?set in .env}
+      KC_HOSTNAME: http://localhost:8081
+      KC_HTTP_ENABLED: 'true'
+    ports: ["8081:8080"]
+    volumes:
+      - ./infra/keycloak:/config:ro
+    depends_on:
+      keycloak-db: {condition: service_healthy}
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: medlearn
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set in .env}
+    volumes: [rabbitdata:/var/lib/rabbitmq]
+  user-service:
+    build: ./services/user-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/medlearn_users
+      DB_USER: medlearn
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      UPLOAD_DIR: /app/uploads
+      RABBIT_HOST: rabbitmq
+      RABBIT_PASSWORD: ${RABBITMQ_PASSWORD}
+    volumes: [./infra/uploads:/app/uploads]
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+      rabbitmq: {condition: service_started}
+  enrollment-service:
+    build: ./services/enrollment-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/medlearn_enrollments
+      DB_USER: medlearn
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      COURSE_SERVICE: http://course-service:8084
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+  course-service:
+    build: ./services/course-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/medlearn_courses
+      DB_USER: medlearn
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      ENROLLMENT_SERVICE: http://enrollment-service:8083
+      USER_SERVICE: http://user-service:8082
+      MEDIA_DIR: /app/media
+    volumes: [coursemedia:/app/media]
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+  exam-service:
+    build: ./services/exam-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/medlearn_exams
+      DB_USER: medlearn
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      SERVICE_CLIENT_ID: medlearn-exam-service
+      SERVICE_CLIENT_SECRET: ${EXAM_CLIENT_SECRET:?set in .env}
+      COURSE_SERVICE: http://course-service:8084
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+      course-service: {condition: service_started}
+  certificate-service:
+    build: ./services/certificate-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/medlearn_certificates
+      DB_USER: medlearn
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      SERVICE_CLIENT_ID: medlearn-certificate-service
+      SERVICE_CLIENT_SECRET: ${SERVICE_CLIENT_SECRET:?set in .env}
+      EXAM_SERVICE: http://exam-service:8085
+      USER_SERVICE: http://user-service:8082
+      COURSE_SERVICE: http://course-service:8084
+      VERIFICATION_BASE: http://localhost:3000/verify
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_started}
+      exam-service: {condition: service_started}
+  gateway:
+    build: ./services/api-gateway
+    ports: ["8080:8080"]
+    environment:
+      JWT_ISSUER: http://localhost:8081/realms/medlearn
+      USER_SERVICE: http://user-service:8082
+      ENROLLMENT_SERVICE: http://enrollment-service:8083
+      COURSE_SERVICE: http://course-service:8084
+      EXAM_SERVICE: http://exam-service:8085
+      CERTIFICATE_SERVICE: http://certificate-service:8086
+    depends_on:
+      - exam-service
+      - certificate-service
+      - course-service
+      - user-service
+      - enrollment-service
+  web:
+    build: ./web
+    ports: ["3000:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8081
+      NEXT_PUBLIC_KEYCLOAK_REALM: medlearn
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: medlearn-web
+    depends_on: [gateway]
+volumes:
+  pgdata:
+  keycloakdata:
+  rabbitdata:
+  coursemedia:
