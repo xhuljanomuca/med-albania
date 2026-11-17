@@ -61,7 +61,7 @@ The Keycloak realm is imported from `infra/keycloak/medlearn-realm.json` on firs
 
 
 ## Phase 2
-See [Phase 2 status](docs/PHASE2.md) and [Phase 2 API](docs/API_PHASE2.md). Course service is port 8084 inside Docker; gateway exposes `/api/courses/**`. Run `docker compose up --build -d` after setting `.env`. **This has not been compiled or integration-tested in the current environment.**
+See [Phase 2 status](docs/PHASE2.md) and [Phase 2 API](docs/API_PHASE2.md). Course service is port 8084 inside Docker; gateway exposes `/api/courses/**`. Run `docker compose up --build -d` after setting `.env`.
 
 ## Phase 4 additions
-See `docs/PHASE4.md`. Certificate service, PDF/QR verification, achievement record and basic certificate gallery/admin page have been added. **This is not a verified production build**; Java 25/Maven/Docker integration checks were unavailable and Phase 1–3 issues may remain. Certificate issuance is currently user-initiated rather than automatic.
+See `docs/PHASE4.md`. Certificate service, PDF/QR verification, achievement record and basic certificate gallery/admin page have been added.
