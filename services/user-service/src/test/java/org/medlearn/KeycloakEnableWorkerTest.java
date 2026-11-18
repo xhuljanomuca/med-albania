@@ -20,8 +20,10 @@ class KeycloakEnableWorkerTest {
   var w=new KeycloakEnableWorker.Work(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID());
   when(jdbc.update(contains("SET completed_at=now()"),eq(w.id()),eq(w.claimToken()))).thenReturn(0);
   worker.success(w);
-  verify(jdbc,never()).update(contains("SET status='ACTIVE'"),any());
- }
+  verify(jdbc, never()).update(
+          contains("SET status='ACTIVE'"),
+          any(Object[].class)
+  ); }
  @Test void failedRemoteEnablementRetainsRetryableRecord() {
   JdbcTemplate jdbc=mock(JdbcTemplate.class);var worker=new KeycloakEnableWorker(jdbc,mock(KeycloakAdmin.class));
   var w=new KeycloakEnableWorker.Work(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID());

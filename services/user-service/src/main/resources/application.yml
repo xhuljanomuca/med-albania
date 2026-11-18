@@ -10,13 +10,14 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${JWT_ISSUER}
           jwk-set-uri: ${KEYCLOAK_INTERNAL:http://keycloak:8080}/realms/medlearn/protocol/openid-connect/certs
-
 
 medlearn:
   security:
