@@ -40,7 +40,21 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "medlearn-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "medlearn-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     },
     {
       "clientId": "medlearn-backend",
@@ -48,7 +62,21 @@
       "publicClient": false,
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
-      "secret": "CHANGE_ME_LONG_RANDOM_CLIENT_SECRET"
+      "secret": "CHANGE_ME_LONG_RANDOM_CLIENT_SECRET",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "medlearn-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "medlearn-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     },
     {
       "clientId": "medlearn-certificate-service",
@@ -57,7 +85,21 @@
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "secret": "CHANGE_ME_CERTIFICATE_CLIENT_SECRET"
+      "secret": "CHANGE_ME_CERTIFICATE_CLIENT_SECRET",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "medlearn-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "medlearn-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     },
     {
       "clientId": "medlearn-exam-service",
@@ -65,7 +107,21 @@
       "publicClient": false,
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
-      "secret": "CHANGE_ME_EXAM_CLIENT_SECRET"
+      "secret": "CHANGE_ME_EXAM_CLIENT_SECRET",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "medlearn-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "medlearn-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     }
   ],
   "users": [

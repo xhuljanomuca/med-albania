@@ -1,9 +1,17 @@
-name: verify
-on: [push, pull_request, workflow_dispatch]
+name: MedLearn Java 25 and frontend verification
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   java:
+    name: Java 25 / ${{ matrix.service }}
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     strategy:
+      fail-fast: false
       matrix:
         service: [api-gateway, user-service, enrollment-service, course-service, exam-service, certificate-service]
     steps:
@@ -14,25 +22,97 @@ jobs:
           java-version: '25'
           cache: maven
           cache-dependency-path: services/${{ matrix.service }}/pom.xml
-      - name: Java 25 and Maven versions
-        run: java -version && mvn -version
-      - name: Build and run tests
-        run: mvn -B clean verify
+      - name: Verify build prerequisites
+        run: |
+          java -version
+          mvn -version
+          docker info
+      - name: Compile and execute unit and Testcontainers tests
         working-directory: services/${{ matrix.service }}
+        run: mvn -B -ntp -DtrimStackTrace=false clean verify
+      - name: Publish Maven and Testcontainers diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-${{ matrix.service }}-test-reports
+          path: |
+            services/${{ matrix.service }}/target/surefire-reports/**
+            services/${{ matrix.service }}/target/failsafe-reports/**
+            services/${{ matrix.service }}/target/site/jacoco/**
+          if-no-files-found: warn
   frontend:
+    name: Node 22 / Next.js production build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit
+      - name: Install dependencies
         working-directory: web
-      - run: npm run build
+        run: npm install --no-audit --no-fund
+      - name: Production build
         working-directory: web
-  structure:
+        run: npm run build
+      - name: Upload Next.js build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-diagnostics
+          path: |
+            web/.next/**
+            web/npm-debug.log
+          if-no-files-found: ignore
+  static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 scripts/validate_structure.py
-      - run: python3 scripts/phase48_preflight.py
+      - name: Run regression scripts
+        run: |
+          set -euo pipefail
+          for script in scripts/*.py; do python3 "$script"; done
+  compose-smoke:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: [java, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare isolated CI environment
+        run: |
+          cp .env.example .env
+          sed -i 's/CHANGE_ME_/CI_TEST_/g; s/REPLACE_WITH_/CI_TEST_/g' .env
+          # CI-only ephemeral secrets; never reuse outside the runner.
+      - name: Check Compose syntax
+        run: docker compose config --quiet
+      - name: Build and start application
+        run: docker compose up -d --build --wait
+      - name: Inspect services
+        run: docker compose ps --all
+      - name: Verify Keycloak discovery and realm availability
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 40); do
+            if curl --fail --silent --show-error http://localhost:8081/realms/medlearn/.well-known/openid-configuration -o keycloak-discovery.json; then
+              python3 -m json.tool keycloak-discovery.json >/dev/null
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Keycloak OIDC discovery not available' >&2
+          exit 1
+      - name: Capture logs
+        if: always()
+        run: docker compose logs --no-color > compose-logs.txt 2>&1 || true
+      - name: Upload Compose logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-logs
+          path: |
+            compose-logs.txt
+            keycloak-discovery.json
+      - name: Stop application
+        if: always()
+        run: docker compose down -v --remove-orphans

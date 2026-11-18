@@ -1,121 +1,85 @@
-
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.1</version>
-    <relativePath/>
-  </parent>
-
-  <groupId>org.medlearn</groupId>
-  <artifactId>certificate-service</artifactId>
-  <version>0.1.0</version>
-
-  <properties>
-    <java.version>25</java.version>
-  </properties>
-
-  <dependencies>
-
-    <!-- Spring Boot Web MVC -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webmvc</artifactId>
-    </dependency>
-
-    <!-- Spring Data JPA -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-
-    <!-- Spring Security -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-
-    <!-- OAuth2 Resource Server -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
-
-    <!-- Flyway -->
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-database-postgresql</artifactId>
-    </dependency>
-
-    <!-- PostgreSQL -->
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-    </dependency>
-
-    <!-- PDF Generation -->
-    <dependency>
-      <groupId>com.github.librepdf</groupId>
-      <artifactId>openpdf</artifactId>
-      <version>2.0.5</version>
-    </dependency>
-
-    <!-- QR Code Generation -->
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
-      <version>3.5.3</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
-      <version>3.5.3</version>
-    </dependency>
-
-    <!-- Spring Boot Testing -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- Testcontainers PostgreSQL -->
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>1.20.6</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- Testcontainers JUnit -->
-    <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>1.20.6</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
-</project>
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:project xmlns:ns0="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <ns0:modelVersion>4.0.0</ns0:modelVersion>
+  <ns0:parent>
+    <ns0:groupId>org.springframework.boot</ns0:groupId>
+    <ns0:artifactId>spring-boot-starter-parent</ns0:artifactId>
+    <ns0:version>4.0.1</ns0:version>
+    <ns0:relativePath />
+  </ns0:parent>
+  <ns0:groupId>org.medlearn</ns0:groupId>
+  <ns0:artifactId>certificate-service</ns0:artifactId>
+  <ns0:version>0.1.0</ns0:version>
+  <ns0:properties>
+    <ns0:java.version>25</ns0:java.version>
+  </ns0:properties>
+  <ns0:dependencies>
+    <ns0:dependency>
+      <ns0:groupId>org.springframework.boot</ns0:groupId>
+      <ns0:artifactId>spring-boot-starter-webmvc</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.springframework.boot</ns0:groupId>
+      <ns0:artifactId>spring-boot-starter-data-jpa</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.springframework.boot</ns0:groupId>
+      <ns0:artifactId>spring-boot-starter-security</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.springframework.boot</ns0:groupId>
+      <ns0:artifactId>spring-boot-starter-oauth2-resource-server</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.flywaydb</ns0:groupId>
+      <ns0:artifactId>flyway-core</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.flywaydb</ns0:groupId>
+      <ns0:artifactId>flyway-database-postgresql</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.postgresql</ns0:groupId>
+      <ns0:artifactId>postgresql</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>com.github.librepdf</ns0:groupId>
+      <ns0:artifactId>openpdf</ns0:artifactId>
+      <ns0:version>2.0.5</ns0:version>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>com.google.zxing</ns0:groupId>
+      <ns0:artifactId>core</ns0:artifactId>
+      <ns0:version>3.5.3</ns0:version>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>com.google.zxing</ns0:groupId>
+      <ns0:artifactId>javase</ns0:artifactId>
+      <ns0:version>3.5.3</ns0:version>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.springframework.boot</ns0:groupId>
+      <ns0:artifactId>spring-boot-starter-test</ns0:artifactId>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.testcontainers</ns0:groupId>
+      <ns0:artifactId>postgresql</ns0:artifactId>
+      <ns0:version>1.20.6</ns0:version>
+      <ns0:scope>test</ns0:scope>
+    </ns0:dependency>
+    <ns0:dependency>
+      <ns0:groupId>org.testcontainers</ns0:groupId>
+      <ns0:artifactId>junit-jupiter</ns0:artifactId>
+      <ns0:version>1.20.6</ns0:version>
+      <ns0:scope>test</ns0:scope>
+    </ns0:dependency>
+  </ns0:dependencies>
+  <ns0:build>
+    <ns0:plugins>
+      <ns0:plugin>
+        <ns0:groupId>org.springframework.boot</ns0:groupId>
+        <ns0:artifactId>spring-boot-maven-plugin</ns0:artifactId>
+      </ns0:plugin>
+    </ns0:plugins>
+  </ns0:build>
+</ns0:project>

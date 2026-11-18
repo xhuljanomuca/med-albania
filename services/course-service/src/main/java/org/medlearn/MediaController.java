@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;import org.springframework.web.
  }
  @GetMapping("/resources/{id}") public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID id,org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken auth)throws IOException{
   Resource r=resources.findById(id).orElseThrow();Chapter ch=chapters.findById(r.chapterId).orElseThrow();Course c=courses.findById(ch.courseId).orElseThrow();
-  if(!access.allowed(c,auth))throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN);
+  access.chapter(r.chapterId,null,auth);
   Path path=Path.of(mediaDir).toAbsolutePath().normalize().resolve(r.storageKey);if(!Files.isRegularFile(path))throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND);
   return ResponseEntity.ok().contentType(MediaType.parseMediaType(r.mediaType)).header(HttpHeaders.CONTENT_DISPOSITION,(r.downloadAllowed?"attachment":"inline")+"; filename=resource").body(new FileSystemResource(path));
  }

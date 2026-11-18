@@ -17,3 +17,7 @@ spring:
           issuer-uri: ${JWT_ISSUER}
           jwk-set-uri: ${KEYCLOAK_INTERNAL:http://keycloak:8080}/realms/medlearn/protocol/openid-connect/certs
 
+
+medlearn:
+  security:
+    audience: ${JWT_AUDIENCE:medlearn-api}

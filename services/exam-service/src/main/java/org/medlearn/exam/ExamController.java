@@ -6,12 +6,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.*;import java.util.*;
+import java.time.*;import java.util.*;import org.springframework.jdbc.core.JdbcTemplate;
 @RestController @RequestMapping("/api/exams") public class ExamController {
  private final QuizRepository quizzes;private final QuestionRepository questions;private final AttemptRepository attempts;private final AnswerRepository answers;
- private final RestClient http=RestClient.create();private final ServiceTokenProvider serviceTokens;
+ private final RestClient http=RestClient.create();private final ServiceTokenProvider serviceTokens;private final ProgressOutboxRepository outbox;private final JdbcTemplate locks;
  @Value("${services.courses}") String courses;
- public ExamController(QuizRepository q,QuestionRepository n,AttemptRepository a,AnswerRepository b,ServiceTokenProvider serviceTokens){this.serviceTokens=serviceTokens;quizzes=q;questions=n;attempts=a;answers=b;}
+ public ExamController(QuizRepository q,QuestionRepository n,AttemptRepository a,AnswerRepository b,ServiceTokenProvider serviceTokens,ProgressOutboxRepository outbox,JdbcTemplate locks){this.locks=locks;this.outbox=outbox;this.serviceTokens=serviceTokens;quizzes=q;questions=n;attempts=a;answers=b;}
  public record QuizInput(UUID courseId,UUID chapterId,String titleSq,String titleEn,Integer passingPercent,Integer timeLimitMinutes,Integer maxAttempts,boolean randomize){}
  public record QuestionInput(int position,String promptSq,String promptEn,List<String> choicesSq,List<String> choicesEn,int correctIndex,String explanationSq,String explanationEn){}
  public record PublicQuestion(UUID id,int position,String prompt,List<String> choices){}
@@ -28,7 +28,7 @@ import java.time.*;import java.util.*;
    if(quiz.chapterId!=null){http.get().uri(courses+"/api/courses/chapters/"+quiz.chapterId).header("Authorization","Bearer "+auth.getToken().getTokenValue()).retrieve().toBodilessEntity();}
    else {
     Map<?,?> learning=http.get().uri(courses+"/api/courses/"+quiz.courseId+"/learn").header("Authorization","Bearer "+auth.getToken().getTokenValue()).retrieve().body(Map.class);
-    Map<?,?> completion=http.get().uri(courses+"/internal/courses/"+quiz.courseId+"/completion/"+user(auth)).headers(h -> h.setBearerAuth(serviceTokens.token())).retrieve().body(Map.class);
+    Map<?,?> completion=http.get().uri(courses+"/api/courses/internal/courses/"+quiz.courseId+"/completion/"+user(auth)).headers(h -> h.setBearerAuth(serviceTokens.token())).retrieve().body(Map.class);
     if(learning==null||completion==null||!Boolean.TRUE.equals(completion.get("ready")))throw forbidden();
    }
   }catch(ResponseStatusException ex){throw ex;}catch(Exception ex){throw forbidden();}
@@ -52,6 +52,8 @@ import java.time.*;import java.util.*;
  }
  @PostMapping("/{quizId}/start") @Transactional public StartResult start(@PathVariable UUID quizId,@RequestHeader(value="Accept-Language",required=false) String lang,JwtAuthenticationToken auth){
   Quiz q=quiz(quizId);if(!"PUBLISHED".equals(q.status))throw forbidden();ensureAccess(q,auth);UUID uid=user(auth);
+  // Serialize attempt creation per quiz/learner across all application instances.
+  locks.queryForObject("SELECT pg_advisory_xact_lock(hashtextextended(?::text, 0))",Long.class,q.id+":"+uid);
   if(attempts.existsByQuizIdAndUserIdAndPassedTrue(q.id,uid))throw new ResponseStatusException(HttpStatus.CONFLICT,"Already passed");
   if(attempts.countByQuizIdAndUserId(q.id,uid)>=q.maxAttempts)throw new ResponseStatusException(HttpStatus.CONFLICT,"Attempt limit reached");
   List<Question> list=new ArrayList<>(questions.findByQuizIdOrderByPositionAsc(q.id));if(list.isEmpty())throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -59,13 +61,13 @@ import java.time.*;import java.util.*;
   String language=locale(lang);return new StartResult(a.id,a.startedAt.plus(Duration.ofMinutes(q.timeLimitMinutes)),list.stream().map(n->new PublicQuestion(n.id,n.position,"en".equals(language)?n.promptEn:n.promptSq,List.of(("en".equals(language)?n.choicesEn:n.choicesSq).split("\n",-1)))).toList());
  }
  @PostMapping("/attempts/{attemptId}/submit") @Transactional public GradeResult submit(@PathVariable UUID attemptId,@RequestBody Submission submitted,JwtAuthenticationToken auth){
-  Attempt a=attempts.findById(attemptId).orElseThrow();if(!a.userId.equals(user(auth)))throw forbidden();if(a.submittedAt!=null)throw new ResponseStatusException(HttpStatus.CONFLICT,"Already submitted");
+  Attempt a=attempts.findByIdForUpdate(attemptId).orElseThrow();if(!a.userId.equals(user(auth)))throw forbidden();if(a.submittedAt!=null)throw new ResponseStatusException(HttpStatus.CONFLICT,"Already submitted");
   Quiz q=quiz(a.quizId);Instant now=Instant.now();if(now.isAfter(a.startedAt.plus(Duration.ofMinutes(q.timeLimitMinutes))))throw new ResponseStatusException(HttpStatus.CONFLICT,"Time limit exceeded");
   Map<UUID,Integer> supplied=submitted.answers()==null?Map.of():submitted.answers();List<UUID> order=Arrays.stream(a.questionOrder.split(",")).map(UUID::fromString).toList();
   if(!order.containsAll(supplied.keySet()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Unknown question");
   int correct=0;for(UUID id:order){Question n=questions.findById(id).orElseThrow();Integer selected=supplied.get(id);if(selected!=null){if(selected<0||selected>3)throw new ResponseStatusException(HttpStatus.BAD_REQUEST);Answer answer=new Answer();answer.attemptId=a.id;answer.questionId=id;answer.selectedIndex=selected;answer.correct=selected==n.correctIndex;answers.save(answer);if(answer.correct)correct++;}}
   a.scorePercent=score(correct,order.size());a.passed=a.scorePercent>=q.passingPercent;a.submittedAt=now;attempts.save(a);
-  if(a.passed&&q.chapterId!=null){http.post().uri(courses+"/internal/chapters/"+q.chapterId+"/complete").headers(h -> h.setBearerAuth(serviceTokens.token())).body(Map.of("userId",a.userId.toString())).retrieve().toBodilessEntity();}
+  if(a.passed&&q.chapterId!=null){ProgressOutbox event=new ProgressOutbox();event.id=UUID.randomUUID();event.attemptId=a.id;event.chapterId=q.chapterId;event.userId=a.userId;event.createdAt=now;outbox.save(event);}
   return new GradeResult(a.id,a.scorePercent,a.passed,correct,order.size());
  }
  @GetMapping("/me/attempts") public List<Map<String,Object>> history(JwtAuthenticationToken auth){return attempts.findByUserIdOrderByStartedAtDesc(user(auth)).stream().map(a->{Map<String,Object> result=new LinkedHashMap<>();result.put("id",a.id);result.put("quizId",a.quizId);result.put("attemptNumber",a.attemptNumber);result.put("startedAt",a.startedAt);result.put("submittedAt",a.submittedAt);result.put("scorePercent",a.scorePercent);result.put("passed",a.passed);return result;}).toList();}

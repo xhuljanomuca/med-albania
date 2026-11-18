@@ -20,3 +20,7 @@ services:
   enrollment: ${ENROLLMENT_SERVICE:http://enrollment-service:8083}
   users: ${USER_SERVICE:http://user-service:8082}
 
+
+medlearn:
+  security:
+    audience: ${JWT_AUDIENCE:medlearn-api}

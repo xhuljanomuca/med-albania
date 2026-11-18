@@ -8,9 +8,9 @@ import java.nio.file.*;
 import java.util.*;
 import java.io.*;
 @RestController @RequestMapping("/api/users") public class UserController {
- private final ProfileRepo repo;private final KeycloakAdmin kc;
+ private final ProfileRepo repo;private final KeycloakAdmin kc;private final org.springframework.jdbc.core.JdbcTemplate jdbc;private final KeycloakEnableWorker approvalWorker;
  @Value("${UPLOAD_DIR:/app/uploads}") String uploadDir;
- public UserController(ProfileRepo repo,KeycloakAdmin kc){this.repo=repo;this.kc=kc;}
+ public UserController(ProfileRepo repo,KeycloakAdmin kc,org.springframework.jdbc.core.JdbcTemplate jdbc,KeycloakEnableWorker approvalWorker){this.repo=repo;this.kc=kc;this.jdbc=jdbc;this.approvalWorker=approvalWorker;}
  public record Registration(String email,String password,String academy,String category,String firstName,String fatherName,String surname,String nationalId,String phone,String city,String workplace,String profession,String university,String degree,String discipline,Integer studyYear,String locale){}
  public record Decision(boolean approve,String reason){}
  @GetMapping("/catalog") public Map<String,Object> catalog(){return Map.of("professions",List.of("Physician","Pharmacist","Nurse","Dentist","Physiotherapist"),"disciplines",List.of("Medicine","Pharmacy","Nursing","Dentistry","Physiotherapy"),"degrees",List.of("Bachelor","Master","Integrated Master","PhD"));}
@@ -37,7 +37,23 @@ import java.io.*;
  }
  @GetMapping("/me") public Profile me(JwtAuthenticationToken auth){return repo.findByKeycloakId(UUID.fromString(auth.getName())).orElseThrow();}
  @PutMapping("/me") public Profile update(@RequestBody Map<String,String> changes,JwtAuthenticationToken auth){Profile p=me(auth);p.phone=changes.getOrDefault("phone",p.phone);p.city=changes.getOrDefault("city",p.city);p.workplace=changes.getOrDefault("workplace",p.workplace);p.locale=changes.getOrDefault("locale",p.locale);return repo.save(p);}
+ @GetMapping(value="/admin/{id}/payment",produces=MediaType.APPLICATION_PDF_VALUE)
+ public ResponseEntity<org.springframework.core.io.Resource> payment(@PathVariable UUID id) throws IOException {
+  Profile p=repo.findById(id).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+  if(p.paymentFile==null||!p.paymentFile.matches("[0-9a-fA-F-]{36}\\.pdf"))throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND,"No payment document");
+  Path directory=Paths.get(uploadDir).toAbsolutePath().normalize();
+  Path target=directory.resolve(p.paymentFile).normalize();
+  if(!target.startsWith(directory)||!Files.isRegularFile(target)||Files.isSymbolicLink(target))throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND);
+  return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename=payment.pdf")
+   .header("X-Content-Type-Options","nosniff")
+   .body(new org.springframework.core.io.FileSystemResource(target));
+ }
  @GetMapping("/admin/pending") public List<Profile> pending(){return repo.findByStatus("PENDING");}
- @PostMapping("/admin/{id}/decision") public Profile decision(@PathVariable UUID id,@RequestBody Decision d){Profile p=repo.findById(id).orElseThrow();if(!"PENDING".equals(p.status))throw new IllegalStateException("Not pending");if(d.approve()){kc.enable(p.keycloakId);p.status="ACTIVE";}else{p.status="REJECTED";p.rejectionReason=d.reason();}return repo.save(p);}
+ @org.springframework.transaction.annotation.Transactional
+ @PostMapping("/admin/{id}/decision") public Profile decision(@PathVariable UUID id,@RequestBody Decision d,JwtAuthenticationToken auth){Profile p=repo.findById(id).orElseThrow();if(!"PENDING".equals(p.status))throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT,"Application already decided");if(d.approve()){if(p.paymentFile==null)throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT,"Payment document required");p.status="APPROVAL_PENDING";}else{if(d.reason()==null||d.reason().isBlank())throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST,"Rejection reason required");p.status="REJECTED";p.rejectionReason=d.reason().trim();}Profile saved=repo.saveAndFlush(p);if(d.approve())jdbc.update("INSERT INTO keycloak_enable_outbox(id,profile_id,keycloak_id,next_attempt_at) VALUES (?,?,?,now())",UUID.randomUUID(),p.id,p.keycloakId);jdbc.update("INSERT INTO payment_decision_audit(id,profile_id,actor_id,decision,reason) VALUES (?,?,?,?,?)",UUID.randomUUID(),p.id,UUID.fromString(auth.getName()),d.approve()?"APPROVED":"REJECTED",d.approve()?null:p.rejectionReason);return saved;}
+ @GetMapping("/admin/approval-sync") public List<Map<String,Object>> approvalSync(){return jdbc.queryForList("SELECT id,profile_id,retry_count,next_attempt_at,last_error,completed_at,dead_lettered_at FROM keycloak_enable_outbox ORDER BY created_at DESC LIMIT 100");}
+ @GetMapping("/admin/approval-sync/summary") public Map<String,Long> approvalSummary(){return Map.of("pending",approvalWorker.pendingCount(),"deadLetter",approvalWorker.deadLetterCount());}
+ @PostMapping("/admin/approval-sync/{id}/requeue") public ResponseEntity<?> requeueApproval(@PathVariable UUID id){return approvalWorker.requeue(id)==1?ResponseEntity.noContent().build():ResponseEntity.notFound().build();}
+ @GetMapping("/admin/{id}/decisions") public List<Map<String,Object>> decisions(@PathVariable UUID id){return jdbc.queryForList("SELECT id,profile_id,actor_id,decision,reason,occurred_at FROM payment_decision_audit WHERE profile_id=? ORDER BY occurred_at DESC LIMIT 100",id);}
  @ExceptionHandler(IllegalArgumentException.class) ResponseEntity<?> bad(IllegalArgumentException ex){return ResponseEntity.badRequest().body(Map.of("error",ex.getMessage()));}
 }

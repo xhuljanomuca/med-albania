@@ -17,6 +17,8 @@ spring:
           issuer-uri: ${JWT_ISSUER}
           jwk-set-uri: ${KEYCLOAK_INTERNAL:http://keycloak:8080}/realms/medlearn/protocol/openid-connect/certs
 medlearn:
+  security:
+    audience: ${JWT_AUDIENCE:medlearn-api}
   exam-url: ${EXAM_SERVICE:http://exam-service:8085}
   verification-base: ${VERIFICATION_BASE:http://localhost:3000/verify}
   user-url: ${USER_SERVICE:http://user-service:8082}
@@ -26,3 +28,5 @@ medlearn:
     token-url: ${KEYCLOAK_INTERNAL:http://keycloak:8080}/realms/medlearn/protocol/openid-connect/token
     client-id: ${SERVICE_CLIENT_ID:medlearn-certificate-service}
     client-secret: ${SERVICE_CLIENT_SECRET:}
+
+# JWT_AUDIENCE must match Keycloak audience mapper for this service.
