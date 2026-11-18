@@ -1,0 +1,12 @@
+"use client";
+import {useEffect,useState} from 'react';
+import Link from 'next/link';
+import {api,initialize,keycloak} from '../../../../lib/auth';
+type Note={id:string;category:string;title_en:string;title_sq:string;body_en:string;body_sq:string;created_at:string;read_at:string|null};
+export default function Notifications(){
+ const [lang,setLang]=useState<'sq'|'en'>('sq');const [items,setItems]=useState<Note[]>([]);const [error,setError]=useState('');const [loading,setLoading]=useState(true);
+ async function refresh(){const r=await api('/api/enrollments/me/notifications');if(!r.ok)throw Error('HTTP '+r.status);setItems(await r.json());}
+ useEffect(()=>{setLang(localStorage.getItem('medlearn-lang')==='en'?'en':'sq');initialize().then(async ok=>{if(!ok){await keycloak.login();return;}await refresh();}).catch(e=>setError(String(e))).finally(()=>setLoading(false));},[]);
+ async function markRead(id:string){try{const r=await api('/api/enrollments/me/notifications/'+id+'/read',{method:'POST'});if(!r.ok)throw Error('HTTP '+r.status);await refresh();}catch(e){setError(String(e));}}
+ return <main className="min-h-screen bg-slate-50 p-5 md:p-10"><div className="mx-auto max-w-4xl"><Link className="text-blue-700 font-bold" href="/dashboard">✚ MedLearn</Link><div className="flex justify-between items-center mt-7"><h1 className="text-3xl font-bold">{lang==='sq'?'Njoftimet':'Notifications'}</h1><select aria-label="Language" value={lang} onChange={e=>{const l=e.target.value as 'sq'|'en';setLang(l);localStorage.setItem('medlearn-lang',l)}}><option value="sq">Shqip</option><option value="en">English</option></select></div>{loading&&<p className="mt-6">{lang==='sq'?'Duke ngarkuar…':'Loading…'}</p>}{error&&<p role="alert" className="text-red-700 mt-4">{error}</p>}<div className="grid gap-4 mt-7">{items.map(n=><article key={n.id} className="card"><div className="flex justify-between gap-3"><div><h2 className="font-semibold text-blue-800">{lang==='sq'?n.title_sq:n.title_en}</h2><p className="text-slate-600 mt-2">{lang==='sq'?n.body_sq:n.body_en}</p><p className="text-xs text-slate-500 mt-3">{new Date(n.created_at).toLocaleString(lang==='sq'?'sq-AL':'en-US')}</p></div>{!n.read_at&&<button className="text-teal-700 underline self-start" onClick={()=>markRead(n.id)}>{lang==='sq'?'Shëno si lexuar':'Mark read'}</button>}</div></article>)}{!loading&&items.length===0&&<p className="card">{lang==='sq'?'Nuk ka njoftime.':'No notifications.'}</p>}</div></div></main>;
+}

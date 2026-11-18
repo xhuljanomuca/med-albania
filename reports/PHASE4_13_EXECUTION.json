@@ -1,0 +1,49 @@
+{
+  "commands": [
+    {
+      "command": "python scripts/validate_structure.py",
+      "exit_code": 0,
+      "stdout": "31/31 static checks passed",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_11_regression.py",
+      "exit_code": 0,
+      "stdout": "Phase 4.11 source contracts: PASS (static only)",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_10_regression.py",
+      "exit_code": 0,
+      "stdout": "PASS: exam chapter completion uses actual course route\nPASS: exam final completion uses actual course route\nPASS: course internal mappings are prefixed by controller\nPASS: course service restricts internal paths\nPASS: gateway blocks internal course routes\nPASS: user service rejects unknown internal endpoints\nPASS: enrollment internal paths denied\nPASS: resource access validates chapter sequencing\nPASS: 8 source contracts",
+      "stderr": ""
+    }
+  ],
+  "parsed_configurations": 23,
+  "tools": {
+    "java": {
+      "available": true,
+      "path": "/usr/bin/java"
+    },
+    "mvn": {
+      "available": false,
+      "path": ""
+    },
+    "docker": {
+      "available": false,
+      "path": ""
+    },
+    "node": {
+      "available": true,
+      "path": "/opt/nvm/versions/node/v22.16.0/bin/node"
+    },
+    "npm": {
+      "available": true,
+      "path": "/opt/nvm/versions/node/v22.16.0/bin/npm"
+    }
+  },
+  "java25_build": "NOT RUN",
+  "testcontainers": "NOT RUN",
+  "nextjs_build": "NOT RUN",
+  "docker_compose": "NOT RUN"
+}

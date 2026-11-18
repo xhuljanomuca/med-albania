@@ -1,0 +1,7 @@
+PASS: user internal role
+PASS: course completion service role
+PASS: course internal fail closed
+PASS: gateway internal denial
+PASS: exam certificate role
+PASS: certificate admin role
+PASS: no unrestricted course wildcard

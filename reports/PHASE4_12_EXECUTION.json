@@ -1,0 +1,42 @@
+{
+  "parsed_config_files": 22,
+  "checks": [
+    {
+      "command": "python scripts/validate_structure.py",
+      "exit_code": 0,
+      "stdout": "29/29 static checks passed\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_11_regression.py",
+      "exit_code": 0,
+      "stdout": "Phase 4.11 source contracts: PASS (static only)\n",
+      "stderr": ""
+    },
+    {
+      "command": "command -v java",
+      "exit_code": 0,
+      "stdout": "/usr/bin/java"
+    },
+    {
+      "command": "command -v mvn",
+      "exit_code": 1,
+      "stdout": ""
+    },
+    {
+      "command": "command -v docker",
+      "exit_code": 1,
+      "stdout": ""
+    },
+    {
+      "command": "command -v node",
+      "exit_code": 0,
+      "stdout": "/opt/nvm/versions/node/v22.16.0/bin/node"
+    },
+    {
+      "command": "command -v npm",
+      "exit_code": 0,
+      "stdout": "/opt/nvm/versions/node/v22.16.0/bin/npm"
+    }
+  ]
+}

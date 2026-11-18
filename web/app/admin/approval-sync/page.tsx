@@ -1,0 +1,12 @@
+"use client";
+import {useEffect,useState} from 'react';
+import Link from 'next/link';
+import {api,initialize,keycloak} from '../../../lib/auth';
+type Job={id:string;profile_id:string;retry_count:number;next_attempt_at:string;last_error:string|null;completed_at:string|null;dead_lettered_at:string|null};
+export default function ApprovalSync(){
+ const [lang,setLang]=useState<'sq'|'en'>('sq');const [jobs,setJobs]=useState<Job[]>([]);const [error,setError]=useState('');const [busy,setBusy]=useState('');
+ async function refresh(){const r=await api('/api/users/admin/approval-sync');if(!r.ok)throw Error(await r.text());setJobs(await r.json());}
+ useEffect(()=>{setLang(localStorage.getItem('medlearn-lang')==='en'?'en':'sq');initialize().then(ok=>ok?refresh():keycloak.login()).catch(e=>setError(String(e)))},[]);
+ async function retry(id:string){if(!confirm(lang==='sq'?'Riprovo sinkronizimin?':'Retry synchronization?'))return;setBusy(id);try{const r=await api('/api/users/admin/approval-sync/'+id+'/requeue',{method:'POST'});if(!r.ok)throw Error(await r.text());await refresh()}catch(e){setError(String(e))}finally{setBusy('')}}
+ return <main className="max-w-6xl mx-auto p-8"><header className="flex justify-between"><Link href="/admin" className="text-blue-700">← {lang==='sq'?'Administrimi':'Administration'}</Link><select value={lang} onChange={e=>{const l=e.target.value as 'sq'|'en';setLang(l);localStorage.setItem('medlearn-lang',l)}}><option value="sq">Shqip</option><option value="en">English</option></select></header><h1 className="text-3xl font-bold my-6">{lang==='sq'?'Sinkronizimi i miratimeve':'Approval synchronization'}</h1><button className="border border-teal-600 text-teal-700 rounded px-4 py-2 mb-4" onClick={()=>refresh().catch(e=>setError(String(e)))}>{lang==='sq'?'Rifresko':'Refresh'}</button>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="space-y-3">{jobs.map(j=><article key={j.id} className="card"><p className="font-semibold break-all">{j.profile_id}</p><p className="text-sm text-slate-600">{j.completed_at?'Completed':j.dead_lettered_at?'Needs review':'Pending'} · {lang==='sq'?'Përpjekje':'Attempts'}: {j.retry_count}</p>{j.last_error&&<p className="text-sm text-red-700 break-words">{j.last_error}</p>}{j.dead_lettered_at&&<button className="rounded bg-teal-700 text-white px-4 py-2 mt-2" disabled={busy===j.id} onClick={()=>retry(j.id)}>{lang==='sq'?'Riprovo':'Retry'}</button>}</article>)}</div></main>;
+}

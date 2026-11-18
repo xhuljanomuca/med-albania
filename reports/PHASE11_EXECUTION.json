@@ -1,0 +1,156 @@
+{
+  "commands": [
+    {
+      "command": "java -version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "openjdk version \"21.0.12.1\" 2026-08-18\nOpenJDK Runtime Environment (build 21.0.12.1+1-1-deb13u1-Debian)\nOpenJDK 64-Bit Server VM (build 21.0.12.1+1-1-deb13u1-Debian, mixed mode, sharing)\n"
+    },
+    {
+      "command": "javac -version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "javac 21.0.12.1\n",
+      "stderr": ""
+    },
+    {
+      "command": "mvn -version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "unavailable_or_timeout",
+      "error": "[Errno 2] No such file or directory: 'mvn'"
+    },
+    {
+      "command": "docker compose version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "unavailable_or_timeout",
+      "error": "[Errno 2] No such file or directory: 'docker'"
+    },
+    {
+      "command": "node --version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "v22.16.0\n",
+      "stderr": ""
+    },
+    {
+      "command": "npm --version",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "10.9.2\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase10_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "Phase 10 source contracts passed (not compilation or runtime tests)\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase48_preflight.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "WARNING: npm lockfile missing; frontend build is not reproducible\nWARNING: Maven Wrapper not present\nStatic checks: 33 configuration files parsed; 0 errors\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_10_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "PASS: exam chapter completion uses actual course route\nPASS: exam final completion uses actual course route\nPASS: course internal mappings are prefixed by controller\nPASS: course service restricts internal paths\nPASS: gateway blocks internal course routes\nPASS: user service rejects unknown internal endpoints\nPASS: enrollment internal paths denied\nPASS: resource access validates chapter sequencing\nPASS: 8 source contracts\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_11_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "Phase 4.11 source contracts: PASS (static only)\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_14_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "PASS: 10 Phase 4.14 source assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_6_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "PASS transactional issuance\nPASS transaction-scoped postgres lock\nPASS lock before existing lookup\nPASS database uniqueness\nPASS trusted recipient lookup\nPASS trusted course lookup\nPASS service bearer token\nPASS admin role protected\nPASS no client-provided certificate identity\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_7_contracts.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "{\n  \"pom:api-gateway\": \"PASS\",\n  \"pom:certificate-service\": \"PASS\",\n  \"pom:course-service\": \"PASS\",\n  \"pom:enrollment-service\": \"PASS\",\n  \"pom:exam-service\": \"PASS\",\n  \"pom:user-service\": \"PASS\",\n  \"config:api-gateway\": \"PASS\",\n  \"config:certificate-service\": \"PASS\",\n  \"config:course-service\": \"PASS\",\n  \"config:enrollment-service\": \"PASS\",\n  \"config:exam-service\": \"PASS\",\n  \"config:user-service\": \"PASS\",\n  \"registration only POST public\": \"PASS\",\n  \"internal paths denied\": \"PASS\",\n  \"certificate transaction lock\": \"PASS\",\n  \"certificate trusted metadata\": \"PASS\",\n  \"testcontainers test\": \"PASS\",\n  \"language resources\": \"PASS\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/phase4_9_security_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "PASS registration_method_limited\nPASS catalog_method_limited\nPASS enrollment_no_unrelated_public_paths\nPASS certificate_internal_default_deny\nPASS exam_internal_default_deny\nPASS gateway_internal_default_deny\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/security_regression.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "PASS: user internal role\nPASS: course completion service role\nPASS: course internal fail closed\nPASS: gateway internal denial\nPASS: exam certificate role\nPASS: certificate admin role\nPASS: no unrestricted course wildcard\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/validate_structure.py",
+      "cwd": "/mnt/data/MedLearn_Phase11",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "40/40 static checks passed\n",
+      "stderr": ""
+    },
+    {
+      "command": "npm run build",
+      "cwd": "/mnt/data/MedLearn_Phase11/web",
+      "status": "failed",
+      "exit_code": 127,
+      "stdout": "\n> medlearn-web@0.1.0 build\n> next build\n\n",
+      "stderr": "sh: 1: next: not found\n"
+    },
+    {
+      "command": "npm install --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=8000",
+      "cwd": "/mnt/data/MedLearn_Phase11/web",
+      "status": "unavailable_or_timeout",
+      "error": "Command '['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund', '--fetch-retries=0', '--fetch-timeout=8000']' timed out after 25 seconds"
+    }
+  ],
+  "configuration_parse_counts": {
+    "pom": 6,
+    "json": 19,
+    "yaml": 8
+  },
+  "runtime_tests_not_executed": [
+    "Java 25 compilation",
+    "Maven unit tests",
+    "PostgreSQL Testcontainers",
+    "Flyway against PostgreSQL",
+    "Keycloak JWT integration",
+    "Docker Compose startup",
+    "Prometheus runtime metrics"
+  ]
+}

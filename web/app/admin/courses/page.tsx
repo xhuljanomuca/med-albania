@@ -1,0 +1,12 @@
+"use client";
+import {useEffect,useState} from 'react';
+import Link from 'next/link';
+import {api,initialize,keycloak} from '../../../lib/auth';
+type Course={id:string;slug:string;titleSq:string;titleEn:string;status:string;academy:string};
+export default function AdminCourses(){
+ const [lang,setLang]=useState<'sq'|'en'>('sq');const [courses,setCourses]=useState<Course[]>([]);const [error,setError]=useState('');const [busy,setBusy]=useState('');
+ useEffect(()=>{setLang(localStorage.getItem('medlearn-lang')==='en'?'en':'sq');initialize().then(ok=>ok?refresh():keycloak.login()).catch(e=>setError(String(e)))},[]);
+ async function refresh(){const r=await api('/api/courses/admin/all');if(!r.ok)throw Error(await r.text());setCourses(await r.json());}
+ async function change(c:Course,status:string){if(!confirm(lang==='sq'?'Konfirmoni ndryshimin e statusit?':'Confirm course status change?'))return;setBusy(c.id);setError('');try{const r=await api('/api/courses/admin/'+c.id+'/status/'+status,{method:'POST'});if(!r.ok)throw Error(await r.text());await refresh()}catch(e){setError(String(e))}finally{setBusy('')}}
+ return <main className="max-w-6xl mx-auto p-8"><header className="flex justify-between"><Link href="/admin" className="text-blue-700">← {lang==='sq'?'Administrimi':'Administration'}</Link><select value={lang} onChange={e=>{const l=e.target.value as 'sq'|'en';setLang(l);localStorage.setItem('medlearn-lang',l)}}><option value="sq">Shqip</option><option value="en">English</option></select></header><h1 className="text-3xl font-bold my-6">{lang==='sq'?'Menaxhimi i kurseve':'Course management'}</h1>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="space-y-4">{courses.map(c=><article className="card flex flex-wrap justify-between gap-4" key={c.id}><div><p className="text-teal-700 text-sm">{c.academy} · {c.status}</p><h2 className="font-bold">{lang==='sq'?c.titleSq:c.titleEn}</h2><p className="text-sm text-slate-500">{c.slug}</p></div><div className="flex gap-2 items-center"><Link href={`/admin/courses/${c.id}/chapters`} className="text-teal-700 underline">{lang==='sq'?'Kapitujt':'Chapters'}</Link>{(['DRAFT','PUBLISHED','ARCHIVED'] as const).filter(x=>x!==c.status).map(status=><button className="border border-blue-600 text-blue-700 rounded px-3 py-2" key={status} disabled={busy===c.id} onClick={()=>change(c,status)}>{status}</button>)}</div></article>)}</div></main>;
+}
