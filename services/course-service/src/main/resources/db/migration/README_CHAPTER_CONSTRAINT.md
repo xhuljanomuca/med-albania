@@ -1,1 +1,2 @@
-The chapter position uniqueness constraint is already present in V1__courses.sql: UNIQUE(course_id,position). No duplicate migration is required. Phase 11 adds saveAndFlush to expose concurrent uniqueness conflicts as HTTP 409.
+The chapter position uniqueness constraint is already present in V1__courses.sql: UNIQUE(course_id,position). No
+duplicate migration is required. Phase 11 adds saveAndFlush to expose concurrent uniqueness conflicts as HTTP 409.

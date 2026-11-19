@@ -1,4 +1,3 @@
-
 package org.medlearn;
 
 import org.springframework.context.annotation.Bean;
@@ -21,125 +20,125 @@ import java.util.Map;
 @Configuration
 public class GatewaySecurity {
 
- @Bean
- SecurityWebFilterChain security(
-         ServerHttpSecurity http,
-         ReactiveJwtAuthenticationConverter jwtConverter
- ) {
+    @Bean
+    SecurityWebFilterChain security(
+            ServerHttpSecurity http,
+            ReactiveJwtAuthenticationConverter jwtConverter
+    ) {
 
-  return http
-          .csrf(ServerHttpSecurity.CsrfSpec::disable)
-          .authorizeExchange(auth -> auth
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(auth -> auth
 
-                  // Public certificate verification
-                  .pathMatchers(
-                          HttpMethod.GET,
-                          "/api/certificates/verify/**"
-                  ).permitAll()
+                        // Public certificate verification
+                        .pathMatchers(
+                                HttpMethod.GET,
+                                "/api/certificates/verify/**"
+                        ).permitAll()
 
-                  // Public user registration
-                  .pathMatchers(
-                          HttpMethod.POST,
-                          "/api/users/register"
-                  ).permitAll()
+                        // Public user registration
+                        .pathMatchers(
+                                HttpMethod.POST,
+                                "/api/users/register"
+                        ).permitAll()
 
-                  // Public user catalog
-                  .pathMatchers(
-                          HttpMethod.GET,
-                          "/api/users/catalog"
-                  ).permitAll()
+                        // Public user catalog
+                        .pathMatchers(
+                                HttpMethod.GET,
+                                "/api/users/catalog"
+                        ).permitAll()
 
-                  // Public course catalog
-                  .pathMatchers(
-                          HttpMethod.GET,
-                          "/api/courses"
-                  ).permitAll()
+                        // Public course catalog
+                        .pathMatchers(
+                                HttpMethod.GET,
+                                "/api/courses"
+                        ).permitAll()
 
-                  // Block direct access to internal APIs
-                  .pathMatchers(
-                          "/api/**/internal/**",
-                          "/internal/**",
-                          "/api/courses/internal/**"
-                  ).denyAll()
+                        // Block direct access to internal APIs
+                        .pathMatchers(
+                                "/api/**/internal/**",
+                                "/internal/**",
+                                "/api/courses/internal/**"
+                        ).denyAll()
 
-                  // Administrator endpoints
-                  .pathMatchers(
-                          "/api/users/admin/**",
-                          "/api/enrollments/admin/**",
-                          "/api/courses/admin/**",
-                          "/api/exams/admin/**",
-                          "/api/certificates/admin/**"
-                  ).hasRole("platform_admin")
+                        // Administrator endpoints
+                        .pathMatchers(
+                                "/api/users/admin/**",
+                                "/api/enrollments/admin/**",
+                                "/api/courses/admin/**",
+                                "/api/exams/admin/**",
+                                "/api/certificates/admin/**"
+                        ).hasRole("platform_admin")
 
-                  // Require authentication elsewhere
-                  .anyExchange().authenticated()
-          )
-          .oauth2ResourceServer(oauth2 ->
-                  oauth2.jwt(jwt ->
-                          jwt.jwtAuthenticationConverter(jwtConverter)
-                  )
-          )
-          .build();
- }
+                        // Require authentication elsewhere
+                        .anyExchange().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwt ->
+                                jwt.jwtAuthenticationConverter(jwtConverter)
+                        )
+                )
+                .build();
+    }
 
- @Bean
- ReactiveJwtAuthenticationConverter jwtConverter() {
+    @Bean
+    ReactiveJwtAuthenticationConverter jwtConverter() {
 
-  ReactiveJwtAuthenticationConverter converter =
-          new ReactiveJwtAuthenticationConverter();
+        ReactiveJwtAuthenticationConverter converter =
+                new ReactiveJwtAuthenticationConverter();
 
-  converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
 
-   Map<String, Object> realm =
-           jwt.getClaimAsMap("realm_access");
+            Map<String, Object> realm =
+                    jwt.getClaimAsMap("realm_access");
 
-   if (realm == null ||
-           !(realm.get("roles") instanceof Collection<?> roles)) {
-    return Flux.empty();
-   }
+            if (realm == null ||
+                    !(realm.get("roles") instanceof Collection<?> roles)) {
+                return Flux.empty();
+            }
 
-   return Flux.fromIterable(roles)
-           .filter(String.class::isInstance)
-           .cast(String.class)
-           .map(role -> (GrantedAuthority)
-                   new SimpleGrantedAuthority("ROLE_" + role));
-  });
+            return Flux.fromIterable(roles)
+                    .filter(String.class::isInstance)
+                    .cast(String.class)
+                    .map(role -> (GrantedAuthority)
+                            new SimpleGrantedAuthority("ROLE_" + role));
+        });
 
-  return converter;
- }
+        return converter;
+    }
 
- @Bean
- CorsWebFilter corsFilter() {
+    @Bean
+    CorsWebFilter corsFilter() {
 
-  CorsConfiguration config = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-  config.setAllowedOrigins(
-          List.of("http://localhost:3000")
-  );
+        config.setAllowedOrigins(
+                List.of("http://localhost:3000")
+        );
 
-  config.setAllowedMethods(
-          List.of(
-                  "GET",
-                  "POST",
-                  "PUT",
-                  "DELETE",
-                  "OPTIONS"
-          )
-  );
+        config.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
 
-  config.setAllowedHeaders(
-          List.of(
-                  "Authorization",
-                  "Content-Type",
-                  "Accept-Language"
-          )
-  );
+        config.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "Accept-Language"
+                )
+        );
 
-  UrlBasedCorsConfigurationSource source =
-          new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-  source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/**", config);
 
-  return new CorsWebFilter(source);
- }
+        return new CorsWebFilter(source);
+    }
 }

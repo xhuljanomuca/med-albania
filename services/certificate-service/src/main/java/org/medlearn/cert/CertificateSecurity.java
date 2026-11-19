@@ -1,4 +1,3 @@
-
 package org.medlearn.cert;
 
 import org.springframework.context.annotation.Bean;
@@ -17,51 +16,51 @@ import java.util.Map;
 @Configuration
 public class CertificateSecurity {
 
- @Bean
- SecurityFilterChain filter(HttpSecurity http) throws Exception {
+    @Bean
+    SecurityFilterChain filter(HttpSecurity http) throws Exception {
 
-  JwtAuthenticationConverter converter =
-          new JwtAuthenticationConverter();
+        JwtAuthenticationConverter converter =
+                new JwtAuthenticationConverter();
 
-  converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
 
-   Map<String, Object> realm =
-           jwt.getClaimAsMap("realm_access");
+            Map<String, Object> realm =
+                    jwt.getClaimAsMap("realm_access");
 
-   if (realm == null ||
-           !(realm.get("roles") instanceof Collection<?> roles)) {
-    return List.of();
-   }
+            if (realm == null ||
+                    !(realm.get("roles") instanceof Collection<?> roles)) {
+                return List.of();
+            }
 
-   return roles.stream()
-           .filter(String.class::isInstance)
-           .map(String.class::cast)
-           .map(role -> (GrantedAuthority)
-                   new SimpleGrantedAuthority("ROLE_" + role))
-           .toList();
-  });
+            return roles.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .map(role -> (GrantedAuthority)
+                            new SimpleGrantedAuthority("ROLE_" + role))
+                    .toList();
+        });
 
-  return http
-          .csrf(csrf -> csrf.disable())
-          .authorizeHttpRequests(auth -> auth
+        return http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
 
-                  // Public certificate verification
-                  .requestMatchers(
-                          HttpMethod.GET,
-                          "/api/certificates/verify/**"
-                  ).permitAll()
+                        // Public certificate verification
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/certificates/verify/**"
+                        ).permitAll()
 
-                  // Platform administrator access
-                  .requestMatchers(
-                          "/api/certificates/admin/**"
-                  ).hasRole("platform_admin")
+                        // Platform administrator access
+                        .requestMatchers(
+                                "/api/certificates/admin/**"
+                        ).hasRole("platform_admin")
 
-                  // All other endpoints require authentication
-                  .anyRequest().authenticated()
-          )
-          .oauth2ResourceServer(oauth2 ->
-                  oauth2.jwt(jwt ->
-                          jwt.jwtAuthenticationConverter(converter)))
-          .build();
- }
+                        // All other endpoints require authentication
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwt ->
+                                jwt.jwtAuthenticationConverter(converter)))
+                .build();
+    }
 }
