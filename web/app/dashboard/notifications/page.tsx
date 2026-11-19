@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
-import {api,initialize,keycloak} from '../../../../lib/auth';
+import {api,initialize,keycloak} from '../../../lib/auth';
 type Note={id:string;category:string;title_en:string;title_sq:string;body_en:string;body_sq:string;created_at:string;read_at:string|null};
 export default function Notifications(){
  const [lang,setLang]=useState<'sq'|'en'>('sq');const [items,setItems]=useState<Note[]>([]);const [error,setError]=useState('');const [loading,setLoading]=useState(true);

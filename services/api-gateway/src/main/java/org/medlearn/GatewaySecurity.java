@@ -56,9 +56,12 @@ public class GatewaySecurity {
 
                         // Block direct access to internal APIs
                         .pathMatchers(
-                                "/api/**/internal/**",
-                                "/internal/**",
-                                "/api/courses/internal/**"
+                                "/api/users/internal/**",
+                                "/api/enrollments/internal/**",
+                                "/api/courses/internal/**",
+                                "/api/exams/internal/**",
+                                "/api/certificates/internal/**",
+                                "/internal/**"
                         ).denyAll()
 
                         // Administrator endpoints

@@ -9,7 +9,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medlearn"]
+      test: ["CMD-SHELL", "pg_isready -U medlearn -d postgres"]
       interval: 5s
       retries: 20
   keycloak-db:
@@ -20,7 +20,7 @@ services:
       POSTGRES_DB: keycloak
     volumes: [keycloakdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
       interval: 5s
       retries: 20
   keycloak:
@@ -51,6 +51,13 @@ services:
       - ./infra/keycloak:/config:ro
     depends_on:
       keycloak-db: {condition: service_healthy}
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    expose:
+      - "1025"
   rabbitmq:
     image: rabbitmq:4-management-alpine
     environment:

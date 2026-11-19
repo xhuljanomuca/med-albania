@@ -42,11 +42,55 @@ public class KeycloakAdmin {
         }
     }
 
+
     void assignRole(UUID id, String role) {
         String auth = "Bearer " + token();
-        @SuppressWarnings("unchecked") Map<String, Object> found = http.get().uri(base + "/admin/realms/medlearn/roles/" + role).header("Authorization", auth).retrieve().body(Map.class);
-        http.post().uri(base + "/admin/realms/medlearn/users/" + id + "/role-mappings/realm").header("Authorization", auth).body(List.of(found)).retrieve().toBodilessEntity();
+
+        String roleUrl = base + "/admin/realms/medlearn/roles/" + role;
+
+        Map<String, Object> found;
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = http.get()
+                    .uri(roleUrl)
+                    .header(HttpHeaders.AUTHORIZATION, auth)
+                    .retrieve()
+                    .body(Map.class);
+
+            found = Objects.requireNonNull(
+                    result,
+                    "Keycloak returned an empty role response"
+            );
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new IllegalStateException(
+                    "Keycloak failed to retrieve realm role '" + role +
+                            "' (HTTP " + e.getStatusCode().value() + ")",
+                    e
+            );
+        }
+
+        String mappingUrl = base +
+                "/admin/realms/medlearn/users/" + id +
+                "/role-mappings/realm";
+
+        try {
+            http.post()
+                    .uri(mappingUrl)
+                    .header(HttpHeaders.AUTHORIZATION, auth)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(List.of(found))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new IllegalStateException(
+                    "Keycloak failed to assign realm role '" + role +
+                            "' (HTTP " + e.getStatusCode().value() + ")",
+                    e
+            );
+        }
     }
+
 
     void enable(UUID id) {
         http.put().uri(base + "/admin/realms/medlearn/users/" + id).header("Authorization", "Bearer " + token()).body(Map.of("enabled", true)).retrieve().toBodilessEntity();
